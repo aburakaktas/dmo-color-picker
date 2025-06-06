@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+}
+
+@layer components {
+  .color-preview {
+    @apply p-4 rounded-lg shadow-sm;
+}
+  
+  .color-input {
+    @apply w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+  
+  .contrast-ratio {
+    @apply text-sm text-gray-600 mt-1;
+}
+  
+  .preview-button {
+    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+  }
+}
