@@ -201,7 +201,8 @@ function ScalablePreview({ children, margin = 32, verticalMargin = 64 }: { child
     ? window.innerHeight - verticalMargin * 2
     : contentHeight;
 
-  const scaleW = availableWidth / previewWidth;
+  const maxPreviewWidth = 1300;
+  const scaleW = Math.min(availableWidth, maxPreviewWidth) / previewWidth;
   const scaleH = availableHeight / contentHeight;
   const scale = Math.min(scaleW, scaleH);
 
@@ -209,6 +210,8 @@ function ScalablePreview({ children, margin = 32, verticalMargin = 64 }: { child
     <div
       style={{
         width: "100%",
+        maxWidth: '1300px',
+        margin: '0 auto',
         minHeight: contentHeight * scale,
         display: "flex",
         justifyContent: "center",
@@ -221,6 +224,7 @@ function ScalablePreview({ children, margin = 32, verticalMargin = 64 }: { child
           transform: `scale(${scale})`,
           transformOrigin: "top center",
           width: previewWidth,
+          maxWidth: maxPreviewWidth,
           marginLeft: margin,
           marginRight: margin,
         }}
