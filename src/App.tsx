@@ -33,20 +33,6 @@ function getAccessibleCtaAndText(cta: string) {
   return { color: c.hex(), text: '#fff' };
 }
 
-function isCtaAccessibleWithHover(base: string) {
-  const hover = chroma(base).darken(0.7).hex();
-  const baseContrastWhite = chroma.contrast(base, '#fff');
-  const baseContrastBlack = chroma.contrast(base, '#222');
-  const hoverContrastWhite = chroma.contrast(hover, '#fff');
-  const hoverContrastBlack = chroma.contrast(hover, '#222');
-  // Find which text color is accessible for base
-  let textColor = baseContrastWhite >= 4.5 ? '#fff' : (baseContrastBlack >= 4.5 ? '#222' : null);
-  if (!textColor) return false;
-  // Check if hover is also accessible with the same text color
-  if (chroma.contrast(hover, textColor) < 4.5) return false;
-  return textColor;
-}
-
 // Figma-accurate List Item
 function ListItem({ primary, cta, ctaText, image }: { primary: string; cta: string; ctaText: string; image: string }) {
   const [ctaHovered, setCtaHovered] = useState(false);
@@ -210,8 +196,8 @@ function ScalablePreview({ children, margin = 32, verticalMargin = 64 }: { child
     }
   }, [children, widths]);
 
-  let availableWidth = widths ? widths.container - widths.sidebar - margin * 2 : previewWidth;
-  let availableHeight = typeof window !== 'undefined'
+  const availableWidth = widths ? widths.container - widths.sidebar - margin * 2 : previewWidth;
+  const availableHeight = typeof window !== 'undefined'
     ? window.innerHeight - verticalMargin * 2
     : contentHeight;
 
@@ -250,7 +236,6 @@ export default function App() {
   const [primary, setPrimary] = useState("#00809d");
   const [cta, setCta] = useState("#ff6b6b");
   const [copied, setCopied] = useState(false);
-  const [ctaWarning, setCtaWarning] = useState("");
   const sidebarRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const [ctaText, setCtaText] = useState('#fff');
 
