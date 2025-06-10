@@ -91,19 +91,19 @@ function ListItem({ primary, cta, ctaText, image }: { primary: string; cta: stri
         {/* Facilities row 1 */}
         <div className="flex flex-row items-center gap-[5.448px] mb-[4.358px]">
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">Platz für 8 Pers.</span>
-          <span className="w-[1.09px] h-[8.717px] bg-[#afaaa5] rounded-[0.545px]" />
+          <span className="w-[1.5px] h-[1.5px] bg-[#afaaa5] rounded-full inline-block" />
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">4 Schlafzimmer</span>
-          <span className="w-[1.09px] h-[8.717px] bg-[#afaaa5] rounded-[0.545px]" />
+          <span className="w-[1.5px] h-[1.5px] bg-[#afaaa5] rounded-full inline-block" />
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">124 m²</span>
         </div>
         {/* Facilities row 2 */}
         <div className="flex flex-row items-center gap-[5.448px] mb-[4.358px]">
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">WLAN</span>
-          <span className="w-[1.09px] h-[8.717px] bg-[#afaaa5] rounded-[0.545px]" />
+          <span className="w-[1.5px] h-[1.5px] bg-[#afaaa5] rounded-full inline-block" />
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">Parkmöglichkeit</span>
-          <span className="w-[1.09px] h-[8.717px] bg-[#afaaa5] rounded-[0.545px]" />
+          <span className="w-[1.5px] h-[1.5px] bg-[#afaaa5] rounded-full inline-block" />
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">Balkon/Terrasse</span>
-          <span className="w-[1.09px] h-[8.717px] bg-[#afaaa5] rounded-[0.545px]" />
+          <span className="w-[1.5px] h-[1.5px] bg-[#afaaa5] rounded-full inline-block" />
           <span className="text-[6.537px] text-[#45423e] leading-[8.717px]">Küche</span>
         </div>
         {/* Free cancellation */}
@@ -246,7 +246,7 @@ export default function App() {
 
   const palette = {
     Primary: { default: primary, hover: primaryHover },
-    CTA: { default: cta, hover: ctaHover, text: ctaText },
+    CTA: { default: cta, hover: ctaHover },
   };
 
   const handlePrimaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -256,9 +256,9 @@ export default function App() {
 
   const handleCtaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.value;
-    const { color, text } = getAccessibleCtaAndText(picked);
+    const { color } = getAccessibleCtaAndText(picked);
     setCta(color);
-    setCtaText(text);
+    setCtaText('#fff'); // still set for UI, but not exported
   };
 
   const primaryText = getContrastText(primary);
