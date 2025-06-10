@@ -9,8 +9,8 @@ function getAccessiblePrimary(color: string) {
   let c = chroma(color);
   let tries = 0;
   // Try darkening up to 10 times
-  while (chroma.contrast(c, "#fff") < 4.5 && tries < 10) {
-    c = c.darken(0.5);
+  while (chroma.contrast(c, "#fff") < 4.5 && tries < 100) {
+    c = c.darken(0.1);
     tries++;
   }
   return c.hex();
@@ -20,16 +20,14 @@ function getAccessiblePrimary(color: string) {
 function getAccessibleCtaAndText(cta: string) {
   let c = chroma(cta);
   let tries = 0;
-  while (tries < 10) {
+  while (tries < 100) {
     const hover = c.darken(0.7);
     const contrastWhite = Math.min(chroma.contrast(c, '#fff'), chroma.contrast(hover, '#fff'));
-    const contrastBlack = Math.min(chroma.contrast(c, '#2B2926'), chroma.contrast(hover, '#2B2926'));
     if (contrastWhite >= 4.5) return { color: c.hex(), text: '#fff' };
-    if (contrastBlack >= 4.5) return { color: c.hex(), text: '#2B2926' };
-    c = c.darken(0.5);
+    c = c.darken(0.1);
     tries++;
   }
-  // fallback
+  // fallback: return the closest color, even if not fully accessible
   return { color: c.hex(), text: '#fff' };
 }
 
