@@ -266,11 +266,6 @@ export default function App() {
   const primaryHover = chroma(primary).darken(0.7).hex();
   const ctaHover = chroma(cta).darken(0.7).hex();
 
-  const palette = {
-    Primary: { default: primary, hover: primaryHover },
-    CTA: { default: cta, hover: ctaHover, text: ctaText },
-  };
-
   const handlePrimaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.value;
     const accessibleColor = getAccessiblePrimary(picked);
