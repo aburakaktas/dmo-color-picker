@@ -20,6 +20,23 @@ function getAccessiblePrimary(color: string) {
 function getAccessibleCtaAndText(cta: string) {
   let c = chroma(cta);
   let tries = 0;
+  
+  // First, check if the original color works with white or black text
+  const hover = c.darken(0.7);
+  const contrastWhite = Math.min(chroma.contrast(c, '#fff'), chroma.contrast(hover, '#fff'));
+  const contrastBlack = Math.min(chroma.contrast(c, '#2B2926'), chroma.contrast(hover, '#2B2926'));
+  
+  // If it works with white text, use white (preferred)
+  if (contrastWhite >= 4.5) {
+    return { color: c.hex(), text: '#fff' };
+  }
+  
+  // If it works with black text, use black
+  if (contrastBlack >= 4.5) {
+    return { color: c.hex(), text: '#2B2926' };
+  }
+  
+  // If neither works, darken the color until it works with white text
   while (tries < 100) {
     const hover = c.darken(0.7);
     const contrastWhite = Math.min(chroma.contrast(c, '#fff'), chroma.contrast(hover, '#fff'));
@@ -27,6 +44,7 @@ function getAccessibleCtaAndText(cta: string) {
     c = c.darken(0.1);
     tries++;
   }
+  
   // fallback: return the closest color, even if not fully accessible
   return { color: c.hex(), text: '#fff' };
 }
@@ -240,25 +258,73 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const [ctaText, setCtaText] = useState('#fff');
+  const [primaryHex, setPrimaryHex] = useState("#00809d");
+  const [ctaHex, setCtaHex] = useState("#ff6b6b");
+  const [primaryMessage, setPrimaryMessage] = useState("");
+  const [ctaMessage, setCtaMessage] = useState("");
 
   const primaryHover = chroma(primary).darken(0.7).hex();
   const ctaHover = chroma(cta).darken(0.7).hex();
 
   const palette = {
     Primary: { default: primary, hover: primaryHover },
-    CTA: { default: cta, hover: ctaHover },
+    CTA: { default: cta, hover: ctaHover, text: ctaText },
   };
 
   const handlePrimaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.value;
-    setPrimary(getAccessiblePrimary(picked));
+    const accessibleColor = getAccessiblePrimary(picked);
+    setPrimary(accessibleColor);
+    setPrimaryHex(accessibleColor);
+    if (picked !== accessibleColor) {
+      setPrimaryMessage(`Adjusted from ${picked} to ${accessibleColor} for accessibility`);
+    } else {
+      setPrimaryMessage("");
+    }
   };
 
   const handleCtaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const picked = e.target.value;
-    const { color } = getAccessibleCtaAndText(picked);
+    const { color, text } = getAccessibleCtaAndText(picked);
     setCta(color);
-    setCtaText('#fff'); // still set for UI, but not exported
+    setCtaText(text);
+    setCtaHex(color);
+    if (picked !== color) {
+      setCtaMessage(`Adjusted from ${picked} to ${color} for accessibility`);
+    } else {
+      setCtaMessage("");
+    }
+  };
+
+  const handlePrimaryHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPrimaryHex(value);
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      const accessibleColor = getAccessiblePrimary(value);
+      setPrimary(accessibleColor);
+      setPrimaryHex(accessibleColor);
+      if (value !== accessibleColor) {
+        setPrimaryMessage(`Adjusted from ${value} to ${accessibleColor} for accessibility`);
+      } else {
+        setPrimaryMessage("");
+      }
+    }
+  };
+
+  const handleCtaHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCtaHex(value);
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+      const { color, text } = getAccessibleCtaAndText(value);
+      setCta(color);
+      setCtaText(text);
+      setCtaHex(color);
+      if (value !== color) {
+        setCtaMessage(`Adjusted from ${value} to ${color} for accessibility`);
+      } else {
+        setCtaMessage("");
+      }
+    }
   };
 
   const primaryText = getContrastText(primary);
@@ -279,12 +345,18 @@ export default function App() {
         <div className="flex flex-row gap-6 mb-2">
           {/* Color 1 Picker Card */}
           <div
-            className="bg-[#f7f5f3] rounded-[20px] p-[12px] flex flex-col items-start justify-start cursor-pointer transition outline-none hover:bg-[#f9fafb] focus-visible:bg-[#f9fafb] hover:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] focus-visible:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] hover:scale-102 focus-visible:scale-102"
-            tabIndex={0}
-            onClick={() => document.getElementById('color1-picker')?.click()}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('color1-picker')?.click(); } }}
-            aria-label="Pick color 1"
+            className="bg-[#f7f5f3] rounded-[20px] p-[12px] flex flex-col items-start justify-start transition outline-none hover:bg-[#f9fafb] focus-visible:bg-[#f9fafb] hover:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] focus-visible:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] hover:scale-102 focus-visible:scale-102"
+            aria-label="Color 1"
           >
+            {/* Hex input for Color 1 */}
+            <input
+              type="text"
+              value={primaryHex}
+              onChange={handlePrimaryHexChange}
+              placeholder="#000000"
+              className="w-full mb-2 px-2 py-1 text-sm border border-[#d1ccc7] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ fontFamily: 'monospace' }}
+            />
             <input
               type="color"
               value={primary}
@@ -308,12 +380,18 @@ export default function App() {
           </div>
           {/* Color 2 Picker Card */}
           <div
-            className="bg-[#f7f5f3] rounded-[20px] p-[12px] flex flex-col items-start justify-start cursor-pointer transition outline-none hover:bg-[#f9fafb] focus-visible:bg-[#f9fafb] hover:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] focus-visible:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] hover:scale-102 focus-visible:scale-102"
-            tabIndex={0}
-            onClick={() => document.getElementById('color2-picker')?.click()}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); document.getElementById('color2-picker')?.click(); } }}
-            aria-label="Pick color 2"
+            className="bg-[#f7f5f3] rounded-[20px] p-[12px] flex flex-col items-start justify-start transition outline-none hover:bg-[#f9fafb] focus-visible:bg-[#f9fafb] hover:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] focus-visible:shadow-[0_4px_24px_0_rgba(0,128,157,0.15)] hover:scale-102 focus-visible:scale-102"
+            aria-label="Color 2"
           >
+            {/* Hex input for Color 2 */}
+            <input
+              type="text"
+              value={ctaHex}
+              onChange={handleCtaHexChange}
+              placeholder="#000000"
+              className="w-full mb-2 px-2 py-1 text-sm border border-[#d1ccc7] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ fontFamily: 'monospace' }}
+            />
             <input
               type="color"
               value={cta}
@@ -336,20 +414,150 @@ export default function App() {
             </div>
           </div>
         </div>
+        {/* Success Messages */}
+        <div className="flex flex-row gap-6 mb-6">
+          <div className="flex-1">
+            {primaryMessage && (
+              <div className="text-xs text-green-600 bg-green-50 px-3 py-2 rounded border border-green-200">
+                {primaryMessage}
+              </div>
+            )}
+          </div>
+          <div className="flex-1">
+            {ctaMessage && (
+              <div className="text-xs text-green-600 bg-green-50 px-3 py-2 rounded border border-green-200">
+                {ctaMessage}
+              </div>
+            )}
+          </div>
+        </div>
         <h2 className="text-lg font-bold mt-10 mb-2">2. Share your colors</h2>
-        <p className="mb-6 text-[#2b2926]">Click the "Copy Colors" button below to copy your selection. Then, please share it with us so we can apply it to your website.</p>
-        <pre className="bg-[#f7f5f3] rounded-xl p-4 text-sm text-[#2b2926] w-full mb-4 border border-[#eee] whitespace-pre-wrap">
-{JSON.stringify(palette, null, 2)}
-        </pre>
-        <button
-          className="mt-2 px-6 py-2 rounded-lg border border-[#d1ccc7] bg-white font-semibold text-[#2b2926] flex items-center gap-2 hover:bg-[#f7f5f3] transition"
-          onClick={handleCopy}
-        >
-<svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M13.2017 17.0981H4.86833V6.26481C4.86833 5.80648 4.49333 5.43148 4.03499 5.43148C3.57666 5.43148 3.20166 5.80648 3.20166 6.26481V17.0981C3.20166 18.0148 3.95166 18.7648 4.86833 18.7648H13.2017C13.66 18.7648 14.035 18.3898 14.035 17.9315C14.035 17.4731 13.66 17.0981 13.2017 17.0981ZM17.3683 13.7648V3.76481C17.3683 2.84814 16.6183 2.09814 15.7017 2.09814H8.20166C7.28499 2.09814 6.53499 2.84814 6.53499 3.76481V13.7648C6.53499 14.6815 7.28499 15.4315 8.20166 15.4315H15.7017C16.6183 15.4315 17.3683 14.6815 17.3683 13.7648ZM15.7017 13.7648H8.20166V3.76481H15.7017V13.7648Z" fill="#2B2926"/>
-</svg>
-          {copied ? "Copied!" : "Copy colors"}
-        </button>
+        <p className="mb-6 text-[#2b2926]">Click the "Copy" buttons below to copy individual color values. Then, please share them with us so we can apply them to your website.</p>
+        
+        <div className="bg-[#f7f5f3] rounded-xl p-4 w-full mb-4 border border-[#eee]">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-[#d1ccc7]">
+                <th className="text-left py-2 font-semibold text-[#2b2926]">Color</th>
+                <th className="text-left py-2 font-semibold text-[#2b2926]">Value</th>
+                <th className="text-left py-2 font-semibold text-[#2b2926]">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-[#d1ccc7]">
+                <td className="py-3 font-medium text-[#2b2926]">Primary (Default)</td>
+                <td className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded border border-[#d1ccc7]" style={{ background: primary }}></div>
+                    <span className="font-mono text-[#2b2926]">{primary}</span>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(primary);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-[#d1ccc7] rounded hover:bg-[#f9fafb] transition"
+                  >
+                    Copy
+                  </button>
+                </td>
+              </tr>
+              <tr className="border-b border-[#d1ccc7]">
+                <td className="py-3 font-medium text-[#2b2926]">Primary (Hover)</td>
+                <td className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded border border-[#d1ccc7]" style={{ background: primaryHover }}></div>
+                    <span className="font-mono text-[#2b2926]">{primaryHover}</span>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(primaryHover);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-[#d1ccc7] rounded hover:bg-[#f9fafb] transition"
+                  >
+                    Copy
+                  </button>
+                </td>
+              </tr>
+              <tr className="border-b border-[#d1ccc7]">
+                <td className="py-3 font-medium text-[#2b2926]">CTA (Default)</td>
+                <td className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded border border-[#d1ccc7]" style={{ background: cta }}></div>
+                    <span className="font-mono text-[#2b2926]">{cta}</span>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(cta);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-[#d1ccc7] rounded hover:bg-[#f9fafb] transition"
+                  >
+                    Copy
+                  </button>
+                </td>
+              </tr>
+              <tr className="border-b border-[#d1ccc7]">
+                <td className="py-3 font-medium text-[#2b2926]">CTA (Hover)</td>
+                <td className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded border border-[#d1ccc7]" style={{ background: ctaHover }}></div>
+                    <span className="font-mono text-[#2b2926]">{ctaHover}</span>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(ctaHover);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-[#d1ccc7] rounded hover:bg-[#f9fafb] transition"
+                  >
+                    Copy
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td className="py-3 font-medium text-[#2b2926]">CTA Text Color</td>
+                <td className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded border border-[#d1ccc7]" style={{ background: ctaText }}></div>
+                    <span className="font-mono text-[#2b2926]">{ctaText}</span>
+                  </div>
+                </td>
+                <td className="py-3">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(ctaText);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 1200);
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-[#d1ccc7] rounded hover:bg-[#f9fafb] transition"
+                  >
+                    Copy
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        {copied && (
+          <div className="text-sm text-green-600 mb-4">
+            ✓ Color copied to clipboard!
+          </div>
+        )}
       </aside>
       {/* Right Panel */}
       <main className="flex-1 flex flex-col items-center py-16 px-8 w-full">
