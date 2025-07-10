@@ -330,12 +330,6 @@ export default function App() {
   const primaryText = getContrastText(primary);
   const primaryHoverBg = chroma(primary).darken(0.7).hex();
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(JSON.stringify(palette, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-  };
-
   return (
     <ContainerWidthProvider sidebarRef={sidebarRef}>
       {/* Left Panel */}
